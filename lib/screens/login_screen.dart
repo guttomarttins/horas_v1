@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:horas_v1/screens/register_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});
@@ -45,7 +46,12 @@ class LoginScreen extends StatelessWidget {
                   SizedBox(height: 16),
                   ElevatedButton(onPressed: () {}, child: Text('Entrar com o Google'),),
                   SizedBox(height: 16),
-                  TextButton(onPressed: () {}, child: Text('Ainda não é cadastrado, crie uma conta'),),
+                  TextButton(
+                    onPressed: () {
+                      //Navigator.pushNamed(context, '/register');
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
+                    },
+                    child: Text('Ainda não é cadastrado, crie uma conta'),),
                 ],
               ),
             )
