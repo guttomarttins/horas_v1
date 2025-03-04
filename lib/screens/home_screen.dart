@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:horas_v1/components/menu.dart';
+import 'package:horas_v1/helpers/hour_helpers.dart';
 import 'package:horas_v1/models/hour.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class HomeScreen extends StatefulWidget {
   final User user;
@@ -63,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
                          },
                          onTap: () {},
                          leading: Icon(Icons.list_alt_rounded, size: 56,),
-                         title: Text("Data: ${model.data} hora: ${model.minutos}"),
+                         title: Text("Data: ${model.data} hora: ${HourHelper.minutesToHours(model.minutos)}"),
                          subtitle: Text(model.descricao != null ? model.descricao! : ''),
                        ),
                      ]
@@ -73,6 +75,91 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           ),
       ),
+    );
+  }
+
+  showFormModal({Hour? model}) {
+    String title = 'Adicionar';
+    String confirmationButton = 'Salvar';
+    String skipButton = 'Cancelar';
+
+    TextEditingController dataController = TextEditingController();
+    final dataMaskFormatter = MaskTextInputFormatter(mask: '##/##/####');
+    TextEditingController minutosController = TextEditingController();
+    final minutosMaskFormatter = MaskTextInputFormatter(mask: '##:##');
+    TextEditingController descricaoController = TextEditingController();
+
+    if (model != null) {
+      title = 'Editando';
+      dataController.text = model.data;
+      minutosController.text = HourHelper.minutesToHours(model.minutos);
+      if (model.descricao != null) {
+        descricaoController.text = model.descricao!;
+      }
+    }
+
+    showModalBottomSheet(context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24),),
+      ),
+      builder: (context) {
+        return Container(
+          height: MediaQuery
+              .of(context)
+              .size
+              .height,
+          padding: EdgeInsets.all(32),
+          child: ListView(
+            children: [
+              Text(title, style: Theme
+                  .of(context)
+                  .textTheme
+                  .headlineSmall,),
+              TextFormField(
+                controller: dataController,
+                keyboardType: TextInputType.datetime,
+                decoration: InputDecoration(
+                  hintText: '01/01/2025',
+                  labelText: 'Data',
+                ),
+                inputFormatters: [dataMaskFormatter],
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: minutosController,
+                keyboardType: TextInputType.datetime,
+                decoration: InputDecoration(
+                    hintText: '00:00',
+                    labelText: 'Horas Trabalhadas'
+                ),
+                inputFormatters: [minutosMaskFormatter],
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: descricaoController,
+                keyboardType: TextInputType.datetime,
+                decoration: InputDecoration(
+                    hintText: 'Lembrete do que você fez',
+                    labelText: 'Descrição'
+                ),
+              ),
+              SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(onPressed: () {
+                    Navigator.pop(context);
+                  }, child: Text(skipButton),),
+                  SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: () {}, child: Text(confirmationButton),),
+                ],
+              ),
+              SizedBox(height: 180),
+            ],
+          ),
+        );
+      },
     );
   }
 
