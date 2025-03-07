@@ -5,6 +5,7 @@ import 'package:horas_v1/components/menu.dart';
 import 'package:horas_v1/helpers/hour_helpers.dart';
 import 'package:horas_v1/models/hour.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:uuid/uuid.dart';
 
 class HomeScreen extends StatefulWidget {
   final User user;
@@ -20,8 +21,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+    refresh();
   }
 
   @override
@@ -34,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
          onPressed: (){
-           //Navigator.push(context, MaterialPageRoute(builder: (context) => AddHour()));
+           showFormModal();
          },
         child: Icon(Icons.add)
       ),
@@ -61,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
                      children: [
                        ListTile(
                          onLongPress: (){
-
+                             showFormModal(model: model);
                          },
                          onTap: () {},
                          leading: Icon(Icons.list_alt_rounded, size: 56,),
@@ -152,7 +153,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   }, child: Text(skipButton),),
                   SizedBox(width: 16),
                   ElevatedButton(
-                    onPressed: () {}, child: Text(confirmationButton),),
+                    onPressed: () {
+                      Hour hour = Hour(
+                          id: const Uuid().v1(),
+                          data: dataController.text,
+                          minutos: HourHelper.hoursToMinutes(minutosController.text)
+                      );
+
+                      if(descricaoController != null){
+                           hour.descricao = descricaoController.text;
+                      }
+
+                      if(model != null){
+                        hour.id = model.id;
+                      }
+
+                      firestore.collection(widget.user.uid).doc(hour.id).set(hour.toMap());
+
+                      refresh();
+
+                      Navigator.pop(context);
+                    },
+                    child: Text(confirmationButton),),
                 ],
               ),
               SizedBox(height: 180),
@@ -164,8 +186,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void remove(Hour model) {
-    setState(() {
-      listHorus.remove(model);
-    });
+    firestore.collection(widget.user.uid).doc(model.id).delete();
+    refresh();
+  }
+
+  Future<void> refresh() async {
+     List<Hour> temp = [];
+
+     QuerySnapshot<Map<String, dynamic>> snapshot = await firestore.collection(widget.user.uid).get();
+     for(var doc in snapshot.docs){
+       temp.add(Hour.fromMap(doc.data()));
+     }
+     setState(() {
+       listHorus = temp;
+     });
   }
 }
