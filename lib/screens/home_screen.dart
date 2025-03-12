@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:horas_v1/components/menu.dart';
 import 'package:horas_v1/helpers/hour_helpers.dart';
@@ -23,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     refresh();
+    setupFCM();
   }
 
   @override
@@ -201,4 +203,44 @@ class _HomeScreenState extends State<HomeScreen> {
        listHorus = temp;
      });
   }
+
+  void setupFCM() async {
+    final fcmToken = FirebaseMessaging.instance.getToken();
+    print(fcmToken);
+
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    NotificationSettings settings = await messaging.requestPermission(
+        alert: true,
+        announcement: true,
+        badge: true,
+        carPlay: true,
+        criticalAlert: true,
+        provisional: true,
+        sound: true
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print("User granted permission");
+    } else
+    if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+      print("User granted provisional permission");
+    } else {
+      print("User declined or has not accepted permission");
+    }
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message){
+      print('Got a message whilist int the foreground!');
+      print('Message data: ${message.data}');
+
+      if(message.notification != null){
+        print('Message also contained a notification: ${message.notification}');
+      }
+    });
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message){
+      print('A new onMessageOpnedApp event was published!');
+    });
+
+  }
+
 }
